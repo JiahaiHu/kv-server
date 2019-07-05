@@ -6,6 +6,7 @@ fn main() {
     protoc_grpcio::compile_grpc_protos(
         &["proto/kvserver.proto"],
         &[proto_root],
-        &proto_root
+        &proto_root,
+        None
     ).expect("Failed to compile gRPC definitions!");
 }
