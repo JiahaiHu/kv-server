@@ -5,3 +5,9 @@ authors = ["Hiko <johanhu2016@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+futures = "0.1.16"
+grpcio = "0.4.3"
+protobuf = "~2"
+
+[build-dependencies]
+protoc-grpcio = "1.0.2"
