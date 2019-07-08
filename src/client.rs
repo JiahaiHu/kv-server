@@ -8,8 +8,8 @@ use grpcio::{ChannelBuilder, EnvBuilder};
 
 mod protos;
 
-use protos::kvserver::HelloRequest;
-use protos::kvserver_grpc::GreeterClient;
+use protos::kvserver::{Status, GetRequest, GetResponse, PutRequest, PutResponse, DeleteRequest, DeleteResponse, ScanRequest, ScanResponse};
+use protos::kvserver_grpc::KvClient;
 
 fn main() {
     let args = env::args().collect::<Vec<_>>();
@@ -22,10 +22,26 @@ fn main() {
 
     let env = Arc::new(EnvBuilder::new().build());
     let ch = ChannelBuilder::new(env).connect(format!("localhost:{}", port).as_str());
-    let client = GreeterClient::new(ch);
+    let client = KvClient::new(ch);
 
-    let mut req = HelloRequest::new();
-    req.set_name(String::from("Alex"));
-    let response = client.hello(&req);
-    println!("{:?}", response);
+    // test put
+    let mut req = PutRequest::new();
+    req.set_key(String::from("A"));
+    req.set_value(String::from("Alex"));
+    let response = client.put(&req).expect("grpc: put failed!");
+    println!("Received PutResponse {{ {:?} }}", response);
+    match response.status {
+            Status::success => println!("put: success"),
+            _ => println!("put: failed"),
+    }
+    
+    // test get
+    let mut req = GetRequest::new();
+    req.set_key(String::from("A"));
+    let response = client.get(&req).expect("grpc: get failed!");
+    println!("Received GetResponse {{ {:?} }}", response);
+    match response.status {
+            Status::success => println!("get: {}", response.value),
+            _ => println!("get: failed"),
+    }
 }

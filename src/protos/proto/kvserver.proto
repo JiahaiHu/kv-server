@@ -1,15 +1,52 @@
 syntax = "proto3";
 
-package helloworld;
+package kvproto;
 
-service Greeter {
-    rpc Hello (HelloRequest) returns (HelloReply) {}
+service Kv {
+    rpc Get (GetRequest) returns (GetResponse) {}
+    rpc Put (PutRequest) returns (PutResponse) {}
+    rpc Delete (DeleteRequest) returns (DeleteResponse) {}
+    rpc Scan (ScanRequest) returns (ScanResponse) {}
 }
 
-message HelloRequest {
-    string name = 1;
+enum Status {
+    success = 0;
+    keyNotFound = 1;
+    failed = 2;
 }
 
-message HelloReply {
-    string message = 1;
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    Status status = 1;
+    string value = 2;
+}
+
+message PutRequest {
+    string key = 1;
+    string value = 2;
+}
+
+message PutResponse {
+    Status status = 1;
+}
+
+message DeleteRequest {
+    string key = 1;
+}
+
+message DeleteResponse {
+    Status status = 1;
+}
+
+message ScanRequest {
+    string key_start = 1;
+    string key_end = 2;
+}
+
+message ScanResponse {
+    Status status = 1;
+    map<string, string> kvs = 2;
 }
