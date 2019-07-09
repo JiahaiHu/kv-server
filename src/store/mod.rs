@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 pub mod engine;
 
-type Key = String;
-type Value = String;
+pub type Key = String;
+pub type Value = String;
 
 pub trait Engine {
     fn get(&self, key: &Key) -> Result<Option<Value>, ()>;
