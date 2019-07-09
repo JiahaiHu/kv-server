@@ -2,21 +2,15 @@ extern crate futures;
 extern crate grpcio;
 extern crate protobuf;
 
-pub mod protos;
-pub mod store;
-
-use std::io::Read;
 use std::sync::Arc;
-use std::{io, thread};
 
-use futures::sync::oneshot;
 use futures::Future;    // trait for UnarySinkResult, oneshot::Receiver, oneshot::Sender
-use grpcio::{Environment, RpcContext, ServerBuilder, UnarySink};
+use grpcio::{Environment, RpcContext, ServerBuilder, UnarySink, Server as GrpcServer};
 
-use protos::kvserver::{Status, GetRequest, GetResponse, PutRequest, PutResponse, DeleteRequest, DeleteResponse, ScanRequest, ScanResponse};
-use protos::kvserver_grpc::{self, Kv};
-use store::Engine;
-use store::engine::Kvdb;
+use crate::protos::kvserver::{Status, GetRequest, GetResponse, PutRequest, PutResponse, DeleteRequest, DeleteResponse, ScanRequest, ScanResponse};
+use crate::protos::kvserver_grpc::{self, Kv};
+use crate::store::Engine;
+use crate::store::engine::Kvdb;
 
 #[derive(Clone)]
 struct KvService {
@@ -106,24 +100,32 @@ impl Kv for KvService {
     }
 }
 
-fn main () {
-    let env = Arc::new(Environment::new(1));
-    let service = kvserver_grpc::create_kv(KvService::new());  // trait Clone required
-    let mut server = ServerBuilder::new(env)
-        .register_service(service)
-        .bind("127.0.0.1", 0)
-        .build()
-        .unwrap();
-    for &(ref host, port) in server.bind_addrs() {
-        println!("listening on {}:{}", host, port);
+pub struct Server {
+    pub server: GrpcServer,
+}
+
+impl Server {
+    pub fn new(host: String, port: u16) -> Self {
+        let env = Arc::new(Environment::new(1));
+        let service = kvserver_grpc::create_kv(KvService::new());
+        let server = ServerBuilder::new(env)
+            .register_service(service)
+            .bind(host.as_ref(), port.clone()).build().unwrap();
+    
+        Server {
+            server,
+        }
     }
-    server.start();
-    let (tx, rx) = oneshot::channel();
-    thread::spawn(move || {
-        println!("Press ENTER to exit...");
-        let _ = io::stdin().read(&mut [0]).unwrap();
-        tx.send(())
-    });
-    let _ = rx.wait();
-    let _ = server.shutdown().wait();
+
+    pub fn start(&mut self) {
+        self.server.start();
+        for &(ref host, port) in self.server.bind_addrs() {
+            println!("listening on {}:{}", host, port);
+        }
+    }
+
+    pub fn stop(&mut self) {
+        println!("stoping server...");
+        self.server.shutdown();
+    }
 }

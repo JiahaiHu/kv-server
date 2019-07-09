@@ -4,13 +4,17 @@ version = "0.1.0"
 authors = ["Hiko <johanhu2016@gmail.com>"]
 edition = "2018"
 
-[[bin]]
-name = "server"
-path = "src/server.rs"
+[lib]
+name = "kv_server"
+path = "src/lib.rs"
 
-[[bin]]
-name = "client"
-path = "src/client.rs"
+# [[bin]]
+# name = "server"
+# path = "src/server.rs"
+
+# [[bin]]
+# name = "client"
+# path = "src/client.rs"
 
 [dependencies]
 futures = "0.1.16"

@@ -1,21 +1,17 @@
 extern crate grpcio;
 extern crate protobuf;
 
-mod protos;
-mod store;
-
 use std::collections::HashMap;
-use std::env;
 use std::sync::Arc;
 
 use grpcio::{ChannelBuilder, EnvBuilder};
 
-use protos::kvserver::{Status, GetRequest, GetResponse, PutRequest, PutResponse, DeleteRequest, DeleteResponse, ScanRequest, ScanResponse};
-use protos::kvserver_grpc::KvClient;
-use store::{Key, Value};
+use crate::protos::kvserver::{Status, GetRequest, PutRequest, DeleteRequest, ScanRequest};
+use crate::protos::kvserver_grpc::KvClient;
+use crate::store::{Key, Value};
 
-struct Client {
-    client: KvClient,
+pub struct Client {
+    pub client: KvClient,
 }
 
 impl Client {
@@ -67,17 +63,4 @@ impl Client {
             _ => None,
         }
     }
-}
-
-fn main() {
-    let args = env::args().collect::<Vec<_>>();
-    if args.len() != 2 {
-        panic!("Expected exactly one argument, the port to connect to.")
-    }
-    let port = args[1]
-        .parse::<u16>()
-        .expect(format!("{} is not a valid port number", args[1]).as_str());
-
-    let client = Client::new(String::from("127.0.0.1"), port);
-    // TODO: get input
 }
