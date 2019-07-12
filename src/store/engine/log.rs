@@ -35,8 +35,8 @@ impl Log {
     }
 
     pub fn record(&mut self, log_type: LogType, key: &str, value: &str) {
-        self.flush_if_full();
         self.batch.push((log_type, key.to_owned(), value.to_owned()));
+        self.flush_if_full();
     }
 
     pub fn flush(&mut self) {

@@ -5,7 +5,7 @@ extern crate protobuf;
 use std::sync::Arc;
 
 use futures::Future;    // trait for UnarySinkResult, oneshot::Receiver, oneshot::Sender
-use grpcio::{Environment, RpcContext, ServerBuilder, UnarySink, Server as GrpcServer};
+use grpcio::{Environment, RpcContext, ServerBuilder, UnarySink, Server as GrpcServer, ShutdownFuture};
 
 use crate::protos::kvserver::{Status, GetRequest, GetResponse, PutRequest, PutResponse, DeleteRequest, DeleteResponse, ScanRequest, ScanResponse};
 use crate::protos::kvserver_grpc::{self, Kv};
@@ -102,18 +102,21 @@ impl Kv for KvService {
 
 pub struct Server {
     pub server: GrpcServer,
+    kv_service: KvService,
 }
 
 impl Server {
     pub fn new(host: String, port: u16) -> Self {
         let env = Arc::new(Environment::new(1));
-        let service = kvserver_grpc::create_kv(KvService::new());   // KvService: Clone required
+        let kv_service = KvService::new();
+        let service = kvserver_grpc::create_kv(kv_service.clone());
         let server = ServerBuilder::new(env)
             .register_service(service)
             .bind(host.as_ref(), port.clone()).build().unwrap();
     
         Server {
             server,
+            kv_service,
         }
     }
 
@@ -124,8 +127,9 @@ impl Server {
         }
     }
 
-    pub fn stop(&mut self) {
+    pub fn stop(&mut self) -> ShutdownFuture {
         println!("stoping server...");
-        self.server.shutdown();
+        self.kv_service.kvdb.flush();
+        self.server.shutdown()
     }
 }
