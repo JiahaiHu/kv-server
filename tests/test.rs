@@ -1,13 +1,13 @@
 extern crate kv_server;
+extern crate futures;
 
-use std::thread;
-use std::time::Duration;
+use futures::Future;
 
 use kv_server::client::Client;
 use kv_server::server::Server;
 
 #[test]
-fn kvtest() {
+fn kv_test() {
     let host = String::from("127.0.0.1");
     let port = 34567;
     let mut server = Server::new(host.clone(), port);
@@ -17,6 +17,11 @@ fn kvtest() {
 
     let test_data = vec![("A", "Alex"), ("B", "Bob"), ("T", "Tom"), ("M", "Mike")];
     
+    // delete if exists
+    for (key, _) in test_data.iter() {
+        client.delete(key.to_string());
+    }
+
     // test get
     let key = String::from("A");
     let ret = client.get(key.clone());
@@ -51,7 +56,38 @@ fn kvtest() {
     let v = ret.get("T");
     assert_eq!(v, None);
 
-    thread::sleep(Duration::from_millis(100));
+    let _ = server.stop().wait();
+}
 
-    server.stop();
+#[test]
+fn recovery_test() {
+    let host = String::from("127.0.0.1");
+    let port = 34567;
+    let key = String::from("A");
+    let value = String::from("Alex");
+    
+    // insert data into database
+    {
+        let mut server = Server::new(host.clone(), port);
+        server.start();
+    
+        let client = Client::new(host.clone(), port);    
+        
+        client.put(key.clone(), value.clone());
+    
+        let _ = server.stop().wait();
+    }
+
+    // test recovery
+    {
+        let mut server = Server::new(host.clone(), port);
+        server.start();
+
+        let client = Client::new(host.clone(), port);
+        
+        let ret = client.get(key.clone());
+        assert_eq!(Some(value.clone()), ret);
+    
+        let _ = server.stop().wait();
+    }
 }
