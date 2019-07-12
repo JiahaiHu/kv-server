@@ -12,8 +12,8 @@ pub enum LogType {
 impl ToString for LogType{
     fn to_string(&self) -> String{
         match self{
-            LogType::Delete => String::from("0"),
-            LogType::Put    => String::from("1"),
+            LogType::Put    => String::from("0"),
+            LogType::Delete => String::from("1"),
         }
     }
 }
