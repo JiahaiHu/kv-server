@@ -107,7 +107,7 @@ pub struct Server {
 impl Server {
     pub fn new(host: String, port: u16) -> Self {
         let env = Arc::new(Environment::new(1));
-        let service = kvserver_grpc::create_kv(KvService::new());
+        let service = kvserver_grpc::create_kv(KvService::new());   // KvService: Clone required
         let server = ServerBuilder::new(env)
             .register_service(service)
             .bind(host.as_ref(), port.clone()).build().unwrap();
