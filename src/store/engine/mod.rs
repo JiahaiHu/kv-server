@@ -96,7 +96,7 @@ impl Engine for Kvdb {
         for (key, value) in map.range(key_start.clone()..key_end.clone()) {
             kvs.insert(key.clone(), value.clone());
         }
-        if map.len() != 0 {
+        if kvs.len() != 0 {
             Ok(Some(kvs))
         }
         else {
